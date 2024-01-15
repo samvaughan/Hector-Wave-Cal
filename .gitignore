@@ -1,0 +1,11 @@
+*.fits
+*.dat
+*.pdf
+*.db
+*.npy
+*.flag
+.DS_Store
+.snakemake/*
+
+results/*
+testing/*
