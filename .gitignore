@@ -4,6 +4,7 @@
 *.db
 *.npy
 *.flag
+*.nc
 .DS_Store
 .snakemake/*
 

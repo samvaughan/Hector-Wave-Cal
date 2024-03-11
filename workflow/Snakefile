@@ -22,13 +22,9 @@ rule all:
     input:
         flag_files=expand("results/flags/{arc_id}_added.flag", arc_id=all_arc_IDs),
         fitted_parameters=expand(
-            "results/FittedParameters/{arc_id}_parameters.npy",
+            "results/FittedParameters/{arc_id}_parameters.nc",
             arc_id=all_arc_IDs,
         ),
-        # polynomial_values_file=expand(
-        #     "results/PolynomialModelValues/{arc_id}_polynomial_coefficients.npy",
-        #     arc_id=all_arc_IDs,
-        # ),
 
 
 rule make_database:
@@ -38,7 +34,7 @@ rule make_database:
         "scripts/create_db.py"
 
 
-rule add_arc_frame:
+rule add_arc_frame_to_database:
     input:
         database=rules.make_database.output.database,
         dat_filename=get_dat_filename,
@@ -47,41 +43,20 @@ rule add_arc_frame:
     output:
         flag_file="results/flags/{arc_id}_added.flag",
     script:
-        "scripts/add_arc_frame.py"
+        "scripts/add_arc_frame_to_database.py"
 
 
-rule fit_model:
+rule fit_model_to_db_data:
     input:
         database=rules.make_database.output.database,
-        flag_file=rules.add_arc_frame.output.flag_file,
+        flag_file=rules.add_arc_frame_to_database.output.flag_file,
     output:
-        parameters="results/FittedParameters/{arc_id}_parameters.npy",
+        parameters="results/FittedParameters/{arc_id}_parameters.nc",
         plot_filename="results/Plots/{arc_id}_residuals.pdf",
     params:
         arc_id="{arc_id}",
+        N_x=8,
+        N_y=4,
+        intensity_cut=100,
     script:
-        "scripts/linear_lst_sq.py"
-
-
-# rule add_arc_frame:
-#     input:
-#         database="results/database/arc_data.db",
-#         arc_frame="resources/ArcFrames/{arc_id}.fits",
-#         tlm_frame=get_tlm_filename,
-#         line_list="resources/LineLists/ccd3_CuAr_lines.csv",
-#     output:
-#         flag="results/flags/{arc_id}_added.flag",
-#     script:
-#         "scripts/fit_emission_lines.py"
-# rule run_model:
-#     input:
-#         database="results/database/arc_data.db",
-#         arc_fname="resources/ArcFrames/{arc_id}.fits",
-#         stan_file="workflow/stan_models/hierarchical_model.stan",
-#         flag="results/flags/{arc_id}_added.flag",
-#     output:
-#         plot="results/Plots/PolynomialModel/{arc_id}_coefficients.pdf",
-#         polynomial_values_file="results/PolynomialModelValues/{arc_id}_polynomial_coefficients.npy",
-#         fibre_numbers_file="results/PolynomialModelValues/{arc_id}_used_fibres.npy",
-#     script:
-#         "scripts/fit_hierarchical_model.py"
+        "scripts/fit_arc_model_from_database.py"

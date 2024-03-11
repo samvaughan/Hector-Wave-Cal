@@ -1,0 +1,7 @@
+arc_id,frame_name,arc_filename,dat_filename,tlm_filename
+29aug10095,29aug0095,resources/ArcFrames/29aug10095red.fits,resources/ArcDataFiles/arcfits_29aug10095.dat,resources/tlm_maps/31aug18030tlm.fits
+29aug10096,29aug0096,resources/ArcFrames/29aug10096red.fits,resources/ArcDataFiles/arcfits_29aug10096.dat,resources/tlm_maps/31aug18030tlm.fits
+01sep10015,01sep0015,resources/ArcFrames/01sep10015red.fits,resources/ArcDataFiles/arcfits_01sep10015.dat,resources/tlm_maps/31aug18030tlm.fits
+01sep10014,01sep0014,resources/ArcFrames/01sep10014red.fits,resources/ArcDataFiles/arcfits_01sep10014.dat,resources/tlm_maps/31aug18030tlm.fits
+01sep30015,01sep0015,resources/ArcFrames/01sep30015red.fits,resources/ArcDataFiles/arcfits_01sep30015.dat,resources/tlm_maps/31aug38030tlm.fits
+01sep30005,01sep0005,resources/ArcFrames/01sep30005red.fits,resources/ArcDataFiles/arcfits_01sep30005.dat,resources/tlm_maps/31aug38030tlm.fits
