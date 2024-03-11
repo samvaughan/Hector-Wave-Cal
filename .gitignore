@@ -7,6 +7,9 @@
 *.nc
 .DS_Store
 .snakemake/*
+old/*
 
 results/*
 testing/*
+
+!results/.git_keep
