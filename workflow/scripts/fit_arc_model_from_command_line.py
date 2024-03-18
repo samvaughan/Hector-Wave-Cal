@@ -18,7 +18,7 @@ parser.add_argument(
     help="Whether to display a plot of the residuals or not",
 )
 parser.add_argument(
-    "--save",
+    "--save_params",
     required=False,
     help="The netcdf filename of the paramters. Must end in .nc",
 )
@@ -29,7 +29,7 @@ arcdata_filename = args.dat_filename
 tlm_filename = args.tlm_filename
 reduced_arc_filename = args.reduced_arc_filename
 plot_residuals = args.plot_residuals
-save = args.save
+save_params = args.save_params
 
 arc_name = Path(reduced_arc_filename).stem.strip("red")
 N_x = 8
@@ -54,9 +54,9 @@ mse = utils.calculate_MSE(model, X2, wavelengths)
 print(f"The MSE is {mse:.3f} A\n")
 
 # Save the parameters
-if save is not None:
+if save_params is not None:
     parameters = utils.save_parameters(
-        save,
+        save_params,
         df_fitting,
         model,
         N_params_per_slitlet,
@@ -68,3 +68,7 @@ if save is not None:
 if plot_residuals:
     fig, axs = utils.plot_residuals(df_fitting, predictions, wavelengths)
     fig.show()
+
+
+# Update the shifts and WAVELA array of the input arc file
+
