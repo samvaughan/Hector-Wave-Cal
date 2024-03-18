@@ -71,4 +71,3 @@ if plot_residuals:
 
 
 # Update the shifts and WAVELA array of the input arc file
-
