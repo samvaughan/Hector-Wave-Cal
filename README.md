@@ -99,7 +99,22 @@ Having said that, we also allow each _fibre_ to have its own distinct value of t
 In summary, the wavelength solution at location within a slitlet, ($x_s$, $y_s$), and corresponding to fibre f is given by:
 
 ```math
-P(x_s, y_s, f) = \sum_{i=0}^{i=N_x}\sum_{j=0}^{j=N_y}a_{i,j}x^{i}y^{j} - a_{0, 0} + b(f)
+P(x_s, y_s, f) = \sum_{i=0}^{i=N_x}\sum_{j=0}^{j=N_y}a_{i,j}x^{i}y^{j} - a_{0, 0} + b_f
 ```
 
+where b_f is a unique constant value for each fibre.
+
+## Fitting
+
+The model is fit using the `sklearn` [Ridge regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html) model. This model includes a regularisation term in the likelihood function which is proportional to the L2-norm of the values of the coefficients in the model. The goal of this term is to shrink coefficient values towards zero unless they make a substantial contribution to the fitted model.
+
+The coefficient of the regularisation term is $\alpha$, which has a default value of 1e-3. 
+
+> [!IMPORTANT]  
+> I haven't performed rigorous testing of the optimum value(s) for $\alpha$! I highly recommend that this parameter is investigated fully before we use this code for the Hector data reduction.
+
 ## Parameter values
+
+I've run this script on ~1500 arcs taken for the Hector survey between December 2022 and March 2024. Some plots of the average values for each parameter, as well as their 1-$\sigma$ standard deviations across all arc frames, are shown below.
+
+![](results/ParamPlots/fibre_constants_AAOmega.pdf)

@@ -45,6 +45,12 @@ parser.add_argument(
     help="Polynomial order in the y direction",
 )
 parser.add_argument(
+    "--alpha",
+    type=float,
+    default=1e-3,
+    help="Ridge regression regularisation term",
+)
+parser.add_argument(
     "--plot-residuals",
     action="store_true",
     help="Whether to display a plot of the residuals or not",
@@ -83,6 +89,7 @@ saved_file_suffix = args.saved_file_suffix
 intensity_cut = args.intensity_cut
 N_x = args.N_x
 N_y = args.N_y
+alpha = args.alpha
 
 if not no_update_arc:
     # To add an "_wavela_updated" to the arc filename, use this line
@@ -102,6 +109,7 @@ print(
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     Performing a 2D wavelength fit of the arc file {reduced_arc_filename}, with TLM map {tlm_filename}.
     Using a polynomial of order {N_x} in the x direction and {N_y} in the y direction for each slitlet.
+    The Ridge Regression regularisation parameter alpha is {alpha}.
     Ignoring arc lines with an "INTENSITY" value less than {intensity_cut}.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     """
@@ -119,7 +127,7 @@ wavelengths = df_fitting.wave.values
 print("\tDone!")
 
 # Do the fitting
-model = utils.fit_model(X=X2, y=wave_standardised)
+model = utils.fit_model(X=X2, y=wave_standardised, alpha=alpha)
 
 # Get the predictions and the mean squared error
 predictions = utils.get_predictions(model, X2, wavelengths)
