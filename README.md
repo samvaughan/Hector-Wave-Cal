@@ -80,13 +80,26 @@ A two dimensional polynomial mitigates some of these issues by reducing the degr
 
 ## The fitting process
 
-This program relies on `2dfdr` to identify the arc lines in a given arc exposure. The $x$ pixel, $y$ pixel and true wavelength for each arc line in every fibre on the detector are saved in a file named `arcfits.dat`. 
+This program relies on `2dfdr` to identify the arc lines in a given arc exposure. The $x$ pixel, fibre number and true wavelength for each arc line on the detector are saved in a file named `arcfits.dat`. 
 
 > [!TIP]
 > A future improvement to the wavelength calibration could be to re-implement this arc line identification on the raw 2D data, rather than performing a 1D identification on each fibre after extraction using the tramline map.
 
-The reduced arc frames which this code uses have already been "scrunched" by `2dfdr`. This means that the coordinates of each arc line are ($x$ pixel, fibre). The variation on the detector happens in ($x$ pixel, $y$ pixel) space, however, and so the first step of the code is to use the tramline
+The fact that the arc line identification happens on the extracted spectra means that the coordinates of each line is ($x$ pixel, fibre). However, the smooth variation to the wavelength solution on the detector happens in ($x$ pixel, $y$ pixel) space. This means that the first step of the code is to interpolate the tramline map to transform each arc line from ($x$ pixel, fibre number) space to ($x$ pixel, $y$ pixel) space.
 
-The polynomial model in this code splits up an AAOmega or Spector arc frame by slitlet. Within each slitlet, we fit a two dimensional polynomial which varies in the $x$ and $y$ direction.
+We then build a polynomial model which allows the wavelength solution to vary smoothly in both dimensions. The model splits up an AAOmega or Spector arc frame by slitlet. Within each slitlet, we fit a two dimensional polynomial which varies in the $x$ and $y$ direction and includes all combined $xy$ cross terms (e.g. $xy$, $x^2y$, $xy^2$, etc). Each slitlet has its own parameters for the polynomial coefficients in the $x$ and $y$ directions, and these coefficients are entirely independent from one another. 
 
+This model makes physical sense from an instrument perspective: fibres within a slitlet are fixed together in place at the slit, and so it is reasonable to assume that two fibres within a slitlet do not have wildly different wavelength solutions. There may be a large difference in wavelength solution between two _slitlets_, however, as these are entirely different bits of metal.
 
+Having said that, we also allow each _fibre_ to have its own distinct value of the constant term in the wavelength solution. We have found that small angle-of-incidence variations between adjacent fibres exist and including this degree of freedom in the polynomial constant gives markedly better results.
+
+> [!TIP]
+> A future improvement could be to create a hierarchial model, where the coefficients within different slitlets are constrained by various hyperparameters (i.e. different slitlets would no longer be independent).
+
+In summary, the wavelength solution within a slitlet is given by:
+
+```math
+P(x_s, y_s)
+```
+
+## Parameter values
