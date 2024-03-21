@@ -117,4 +117,13 @@ The coefficient of the regularisation term is $\alpha$, which has a default valu
 
 I've run this script on ~1500 arcs taken for the Hector survey between December 2022 and March 2024. Some plots of the average values for each parameter, as well as their 1-$\sigma$ standard deviations across all arc frames, are shown below.
 
-![](results/ParamPlots/fibre_constants_AAOmega.pdf)
+The value of the constant parameter for each fibre in AAOmega:
+![](fibre_constants_AAOmega.png)
+
+And for Spector:
+
+![](fibre_constants_Spector.png)
+
+This is the value of the 4th polynomial parameter in the fitting for AAOmega (left) and Spector (right). Note that impact of broken Hexabundles in Spector- the 6th and 13th slitlets have no data in many (if not all) of the arc frames analysed.
+
+![](param_04.png)
