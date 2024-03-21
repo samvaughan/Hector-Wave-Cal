@@ -222,6 +222,18 @@ def load_arc_data_file(datafile):
 
 
 def set_up_arc_fitting(df_full, N_x, N_y, intensity_cut=10):
+    """
+    Set up all the arrays and things we need for the arc fitting.
+
+    Args:
+        df_full (pd.DataFrame): A Dataframe loaded from either read_arc or load_arc_from_db.
+        N_x (int): Polynomial order in the x direction.
+        N_y (int): Polynomial order in the y direction.
+        intensity_cut (int): Ignore all arc lines fainter than this value. Default is 10.
+
+    Returns:
+        tuple:
+    """
     ccd_number = str(df_full.ccd.unique()[0])
     ccd_name, N_slitlets_total, N_fibres_total, N_fibres_per_slitlet = get_info(
         ccd_number
@@ -288,6 +300,18 @@ def set_up_arc_fitting(df_full, N_x, N_y, intensity_cut=10):
 
 
 def fit_model(X, y, alpha=1e-3, fit_intercept=False):
+    """
+    Perform the fitting using an SkLearn Ridge model.
+
+    Args:
+        X (np.ndarray): The Design Matrix of row vectors used in the fitting.
+        y (np.ndarray): The vector of observed wavelengths (which have been rescaled)
+        alpha (float, optional): Ride regression regularisation value. Defaults to 1e-3.
+        fit_intercept (bool, optional): Whether or not to fit the intercept term. Defaults to False, and should probably always be False...
+
+    Returns:
+        Sklearn.Model: the Sklearn model instance
+    """
     print("Doing the fitting...")
 
     model = Ridge(alpha=alpha, fit_intercept=fit_intercept)
@@ -297,10 +321,30 @@ def fit_model(X, y, alpha=1e-3, fit_intercept=False):
 
 
 def standardise(array):
+    """Take an array and standardise the values to lie between -1 and 1
+
+    Args:
+        array (np.ndarray): Array of values to rescale.
+
+    Returns:
+        array: The rescaled array
+    """
     return 2 * (array - array.max()) / (array.max() - array.min()) + 1
 
 
 def get_predictions(model, X, wavelengths):
+    """
+    For a given set of coeffients, dot with a design matrix to make predictions.
+    Multiply these predictions by the mean and standard deviation of the observed wavelengths.
+
+    Args:
+        model (Sklearn.Model): A fitted model, with a .coef_ attribute.
+        X (np.ndarray): A design matrix
+        wavelengths (np.ndarray): The original wavelength array. The predictions will be multiplied by the standard deviation of this array and the mean of this array will be added.
+
+    Returns:
+        np.ndarray: An array of wavelength predictions.
+    """
     beta_hat = model.coef_
 
     predictions = (X @ beta_hat) * wavelengths.std() + wavelengths.mean()
@@ -309,6 +353,17 @@ def get_predictions(model, X, wavelengths):
 
 
 def calculate_MSE(model, X, wavelengths):
+    """
+    Given a model, a design matrix and a set of observed wavelengths, calculate the mean-squared error of the fit.
+
+    Args:
+        model (Sklearn.Model): An Sklearn fitted model.
+        X (np.ndarray): A design matrix.
+        wavelengths (np.ndarray): Observed wavelength values.
+
+    Returns:
+        float: The Mean Squared Error of the predictions.
+    """
     predictions = get_predictions(model, X, wavelengths)
     mse = np.sqrt(
         mean_squared_error(
@@ -320,6 +375,18 @@ def calculate_MSE(model, X, wavelengths):
 
 
 def get_info(ccd_number):
+    """
+    Get various bits of information about an exposure, e.g. how many slitlets there are, how many fibres there are, etc.
+
+    Args:
+        ccd_number (str): The CCD number of the arc exposure. Will be converted to a str.
+
+    Raises:
+        NameError: If the CCD number isn't one of "1", "2", "3", "4"
+
+    Returns:
+        tuple: A tuple of ccd_name, N_slitlets_total, N_fibres_total, N_fibres_per_slitlet
+    """
     ccd_number = str(ccd_number)
     if ccd_number in ["3", "4"]:
         ccd_name = "SPECTOR"
@@ -339,6 +406,16 @@ def get_info(ccd_number):
 
 
 def plot_residuals(df, predictions, wavelengths):
+    """Plot the residuals between a fit and the original data
+
+    Args:
+        df (pd.DataFrame): The dataframe from set_up_arc_fitting.
+        predictions (np.ndarray): Array of predictions from the model.
+        wavelengths (np.ndarray): Original observed wavelength array.
+
+    Returns:
+        tuple: A tuple of fig, ax
+    """
     # Get the residuals
     residuals = wavelengths - predictions
     fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(13, 7), constrained_layout=True)
@@ -366,8 +443,22 @@ def plot_residuals(df, predictions, wavelengths):
 
 
 def save_parameters(output_file, df, model, N_params_per_slitlet, mse, arc_name):
+    """
+    Save the fitted parameters from a model to a netcdf output file, using the xarray package.
+
+    Args:
+        output_file (str): A file to save the results to. Must end in .nc
+        df (pd.DataFrame): A dataframe from set_up_arc_fitting
+        model (sklearn.Model): A fitted model. Must have a .coef_ attribute.
+        N_params_per_slitlet (int): Number of params per slitlet (N_x + 1) * (N_y + 1)
+        mse (float): The mean-squared error of the fit
+        arc_name (str): The name of the arc file
+
+    Returns:
+        xr.dataset: The parameters, saved as an xarray dataset.
+    """
     ccd_number = str(df.ccd.unique()[0])
-    ccd_name, N_slitlets_total, N_fibres_total, N_params_per_slitlet = get_info(
+    ccd_name, N_slitlets_total, N_fibres_total, N_fibres_per_slitlet = get_info(
         ccd_number
     )
 
@@ -409,10 +500,10 @@ def set_up_WAVELA_predictions(tlm_filename, ccd_number, N_x, N_y):
     Set up the needed arrays in order to make predictions to create a new WAVELA array
 
     Args:
-        tlm_filename (_type_): _description_
-        ccd_number (_type_): _description_
-        N_x (_type_): _description_
-        N_y (_type_): _description_
+        tlm_filename (str): The filename of the tramline map
+        ccd_number (str): The CCD the data was observed in. Should be 1, 2, 3 or 4
+        N_x (int): The polynomial order in the x direction.
+        N_y (int): The polynomial order in the y direction.
     """
     # Load the tlm map
     tlm, N_fibres_total, N_pixels_x = load_tlm_map(tlm_filename)
