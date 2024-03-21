@@ -20,6 +20,7 @@ A number of optional input parameters are available:
 - `--intensity-cut`: Ignore all arc lines with an "INTENSITY" value less than this value. Default is 20.
 - `--N_x`: Polynomial order in the x direction. Default is 8.
 - `--N_y`: Polynomial order in the y direction within each slitlet. Default is 4.
+- `--alpha`: Provide a value for the regularisation parameter alpha. Default is $10^{-3}$.
 - `--no-update-arc`: If this parameter is passed, the script won't make a new WAVELA and SHIFTS array and save the results.
 - `--saved-file-suffix`: A suffix which is added to the reduced arc filename to make the output filename which is saved at the end. Default is `_wavela_updated`.
 
