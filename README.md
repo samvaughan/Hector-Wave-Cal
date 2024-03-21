@@ -78,7 +78,7 @@ The usual approach of fitting a low-order polynomial to each fibre independently
 
 A two dimensional polynomial mitigates some of these issues by reducing the degrees of freedom of the problem: instead of fitting independent 5th-order polynomials to each of the ~800 fibres (i.e. 4000 free parameters), a two-dimensional model which describes how wavelength varies as a function of $x$ and $y$ can have significantly fewer. 
 
-## The fitting process
+## The Model
 
 This program relies on `2dfdr` to identify the arc lines in a given arc exposure. The $x$ pixel, fibre number and true wavelength for each arc line on the detector are saved in a file named `arcfits.dat`. 
 
@@ -96,10 +96,10 @@ Having said that, we also allow each _fibre_ to have its own distinct value of t
 > [!TIP]
 > A future improvement could be to create a hierarchial model, where the coefficients within different slitlets are constrained by various hyperparameters (i.e. different slitlets would no longer be independent).
 
-In summary, the wavelength solution within a slitlet is given by:
+In summary, the wavelength solution at location within a slitlet, ($x_s$, $y_s$), and corresponding to fibre f is given by:
 
 ```math
-P(x_s, y_s)
+P(x_s, y_s) = \sum_{i=0, j=0}^{i=N_x, j=N_y}a_{i,j}x^{i}y^{j} - a_{0, 0} + b(f)
 ```
 
 ## Parameter values
