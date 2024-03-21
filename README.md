@@ -99,7 +99,7 @@ Having said that, we also allow each _fibre_ to have its own distinct value of t
 In summary, the wavelength solution at location within a slitlet, ($x_s$, $y_s$), and corresponding to fibre f is given by:
 
 ```math
-P(x_s, y_s) = \sum_{i=0, j=0}^{i=N_x, j=N_y}a_{i,j}x^{i}y^{j} - a_{0, 0} + b(f)
+P(x_s, y_s, f) = \sum_{i=0}^{i=N_x}\sum_{j=0}^{j=N_y}a_{i,j}x^{i}y^{j} - a_{0, 0} + b(f)
 ```
 
 ## Parameter values
