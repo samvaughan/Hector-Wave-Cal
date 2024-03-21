@@ -82,8 +82,8 @@ A two dimensional polynomial mitigates some of these issues by reducing the degr
 
 This program relies on `2dfdr` to identify the arc lines in a given arc exposure. The $x$ pixel, $y$ pixel and true wavelength for each arc line in every fibre on the detector are saved in a file named `arcfits.dat`. 
 
-[!TIP]
-A future improvement to the wavelength calibration could be to re-implement this arc line identification on the raw 2D data, rather than performing a 1D identification on each fibre after extraction using the tramline map.
+> [!TIP]
+> A future improvement to the wavelength calibration could be to re-implement this arc line identification on the raw 2D data, rather than performing a 1D identification on each fibre after extraction using the tramline map.
 
 The reduced arc frames which this code uses have already been "scrunched" by `2dfdr`. This means that the coordinates of each arc line are ($x$ pixel, fibre). The variation on the detector happens in ($x$ pixel, $y$ pixel) space, however, and so the first step of the code is to use the tramline
 
