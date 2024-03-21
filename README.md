@@ -142,3 +142,4 @@ And for Spector:
 This is the value of the 4th polynomial parameter in the fitting for AAOmega (left) and Spector (right). Note that impact of broken Hexabundles in Spector- the 6th and 13th slitlets have no data in many (if not all) of the arc frames analysed.
 
 ![](param_04.png)
+
