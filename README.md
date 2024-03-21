@@ -99,10 +99,17 @@ Having said that, we also allow each _fibre_ to have its own distinct value of t
 In summary, the wavelength solution at location within a slitlet, ($x_s$, $y_s$), and corresponding to fibre f is given by:
 
 ```math
-P(x_s, y_s, f) = \sum_{i=0}^{i=N_x}\sum_{j=0}^{j=N_y}a_{i,j}x^{i}y^{j} - a_{0, 0} + b_f
+P(x_s, y_s, f) = \sum_{i=0}^{i=N_x}\sum_{j=0}^{j=N_y}a_{i,j}x^{i}y^{j} + b_f
 ```
 
 where b_f is a unique constant value for each fibre.
+
+Using the default polynomial orders of 8 in the $x$ direction and 4 in the $y$ direction, our model has the following number of parameters:
+
+- For AAOmega, with 819 fibres and 13 slitlets: 
+    - $N_{\mathrm{parameters}} = 819 + 13 * (8 + 1) * (4 + 1) = 1404$
+- For Spector, with 855 fibres and 19 slitlets:
+    - $N_{\mathrm{parameters}} = 855 + 19 * (8 + 1) * (4 + 1) = 1710$
 
 ## Fitting
 
@@ -113,11 +120,18 @@ The coefficient of the regularisation term is $\alpha$, which has a default valu
 > [!IMPORTANT]  
 > I haven't performed rigorous testing of the optimum value(s) for $\alpha$! I highly recommend that this parameter is investigated fully before we use this code for the Hector data reduction.
 
+## Technical Details
+
+The code uses orthogonal Chebyshev polynomials for the basis functions of the model. They're produced using the pseudo Vandermonde matrix for the desired degree, from the [`numpy.polynomial.chebyshev.chebvander2d`](https://numpy.org/doc/stable/reference/generated/numpy.polynomial.chebyshev.chebvander2d.html) function.
+
+The $x$, $y$ and wavelength coordinates used in the fitting are standardised: for $x$ and $y$, these values are rescaled to lie between -1 and 1. For the wavelength values, we just remove their mean and divide by the standard deviation.
+
 ## Parameter values
 
-I've run this script on ~1500 arcs taken for the Hector survey between December 2022 and March 2024. Some plots of the average values for each parameter, as well as their 1-$\sigma$ standard deviations across all arc frames, are shown below.
+I've run this script on ~1500 arcs taken for the Hector survey between December 2022 and March 2024. Some plots of the average values for each parameter, as well as their 1-$\sigma$ standard deviations across all arc frames, are shown below. We can clearly see the structure in these constant terms within a slitlet, which is remarkably stable across all arc frames.
 
 The value of the constant parameter for each fibre in AAOmega:
+
 ![](fibre_constants_AAOmega.png)
 
 And for Spector:
