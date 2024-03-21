@@ -12,6 +12,24 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 
+def load_tlm_map(tlm_filename):
+    """
+    Given a TLM map, load the data and return the number of fibres and the number of x pixels
+
+    Args:
+        tlm_filename (str): Filename of a tramline map fits file
+
+    Returns:
+        tuple: a tuple of the TLM data, the number of fibres and the number of x pixels
+    """
+    # Load the tlm map
+    tlm_map = fits.open(tlm_filename)
+    tlm = tlm_map["PRIMARY"].data
+    N_fibres, N_pixels = tlm.shape
+
+    return tlm, N_fibres, N_pixels
+
+
 def read_arc(
     arcdata_filename, tlm_filename, reduced_arc_filename, return_column_subset=True
 ):
@@ -44,9 +62,7 @@ def read_arc(
     datafile = Path(arcdata_filename)
 
     # Load the tlm map
-    tlm_map = fits.open(tlm_filename)
-    tlm = tlm_map["PRIMARY"].data
-    N_fibres, N_pixels = tlm.shape
+    tlm, N_fibres, N_pixels = load_tlm_map(tlm_filename)
 
     # Load the arc file
     arc_frame = fits.open(reduced_arc_filename)
@@ -134,7 +150,7 @@ def load_arc_from_db(con, arc_name, verbose=True):
     if verbose:
         print("\tDone!")
 
-    df_full = df_full.rename(dict(CCD='ccd'), axis=1)
+    df_full = df_full.rename(dict(CCD="ccd"), axis=1)
     return df_full
 
 
@@ -206,9 +222,10 @@ def load_arc_data_file(datafile):
 
 
 def set_up_arc_fitting(df_full, N_x, N_y, intensity_cut=10):
-
     ccd_number = str(df_full.ccd.unique()[0])
-    ccd_name, N_slitlets_total, N_fibres_total = get_info(ccd_number)
+    ccd_name, N_slitlets_total, N_fibres_total, N_fibres_per_slitlet = get_info(
+        ccd_number
+    )
 
     # Ignore any duplicated columns we may have- e.g if an arc was added twice
     df_full = df_full.drop_duplicates()
@@ -271,7 +288,6 @@ def set_up_arc_fitting(df_full, N_x, N_y, intensity_cut=10):
 
 
 def fit_model(X, y, alpha=1e-3, fit_intercept=False):
-
     print("Doing the fitting...")
 
     model = Ridge(alpha=alpha, fit_intercept=fit_intercept)
@@ -285,7 +301,6 @@ def standardise(array):
 
 
 def get_predictions(model, X, wavelengths):
-
     beta_hat = model.coef_
 
     predictions = (X @ beta_hat) * wavelengths.std() + wavelengths.mean()
@@ -294,7 +309,6 @@ def get_predictions(model, X, wavelengths):
 
 
 def calculate_MSE(model, X, wavelengths):
-
     predictions = get_predictions(model, X, wavelengths)
     mse = np.sqrt(
         mean_squared_error(
@@ -306,23 +320,25 @@ def calculate_MSE(model, X, wavelengths):
 
 
 def get_info(ccd_number):
+    ccd_number = str(ccd_number)
     if ccd_number in ["3", "4"]:
         ccd_name = "SPECTOR"
         N_slitlets_total = 19
         N_fibres_total = 855
+        N_fibres_per_slitlet = 45
     elif ccd_number in ["1", "2"]:
         ccd_name = "AAOmega"
         N_slitlets_total = 13
         N_fibres_total = 819
+        N_fibres_per_slitlet = 63
     else:
         raise NameError(
             f"CCD number must be '1', '2', '3', '4' and of type string. Currently {ccd_number}, {type(ccd_number)}"
         )
-    return ccd_name, N_slitlets_total, N_fibres_total
+    return ccd_name, N_slitlets_total, N_fibres_total, N_fibres_per_slitlet
 
 
 def plot_residuals(df, predictions, wavelengths):
-
     # Get the residuals
     residuals = wavelengths - predictions
     fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(13, 7), constrained_layout=True)
@@ -350,9 +366,10 @@ def plot_residuals(df, predictions, wavelengths):
 
 
 def save_parameters(output_file, df, model, N_params_per_slitlet, mse, arc_name):
-
     ccd_number = str(df.ccd.unique()[0])
-    ccd_name, N_slitlets_total, N_fibres_total = get_info(ccd_number)
+    ccd_name, N_slitlets_total, N_fibres_total, N_params_per_slitlet = get_info(
+        ccd_number
+    )
 
     # Get the coefficients
     beta_hat = model.coef_
@@ -385,3 +402,49 @@ def save_parameters(output_file, df, model, N_params_per_slitlet, mse, arc_name)
     dataset.to_netcdf(output_file)
 
     return dataset
+
+
+def set_up_WAVELA_predictions(tlm_filename, ccd_number, N_x, N_y):
+    """
+    Set up the needed arrays in order to make predictions to create a new WAVELA array
+
+    Args:
+        tlm_filename (_type_): _description_
+        ccd_number (_type_): _description_
+        N_x (_type_): _description_
+        N_y (_type_): _description_
+    """
+    # Load the tlm map
+    tlm, N_fibres_total, N_pixels_x = load_tlm_map(tlm_filename)
+
+    ccd_name, N_slitlets_total, N_fibres_total, N_fibres_per_slitlet = get_info(
+        ccd_number
+    )
+
+    y_values = tlm.ravel().astype(float)  # Casting to float64 is important
+    x_values = np.tile(np.arange(N_pixels_x), N_fibres_total).ravel()
+    fibre_numbers = np.arange(1, N_fibres_total + 1).repeat(N_pixels_x)
+    slitlet_numbers = (
+        N_slitlets_total - np.ceil(fibre_numbers / N_fibres_per_slitlet) + 1
+    )
+
+    df_predict = pd.DataFrame(
+        data=dict(
+            x_pixel=x_values,
+            y_pixel=y_values,
+            fibre_number=fibre_numbers,
+            slitlet=slitlet_numbers,
+        )
+    )
+
+    # Add some columns to the predict dataframe
+    df_predict["ccd"] = ccd_number
+    df_predict["intensity"] = 100
+    df_predict["wave"] = 0
+    df_predict.loc[:10, "wave"] = 10
+
+    df_predict, wave_standardised, X2 = set_up_arc_fitting(
+        df_predict, N_x=N_x, N_y=N_y, intensity_cut=0
+    )
+
+    return df_predict, wave_standardised, X2, N_pixels_x, N_fibres_total
